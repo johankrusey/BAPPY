@@ -14,5 +14,3 @@ fill_to = Vector2(0.7109, 0.364929)
 material = SubResource("CanvasItemMaterial_fq7la")
 position = Vector2(135, 82)
 texture = SubResource("GradientTexture2D_dd8nx")
-
-[node name="Bone2D" type="Bone2D" parent="."]
