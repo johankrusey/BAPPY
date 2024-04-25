@@ -11,12 +11,9 @@ config_version=5
 [application]
 
 config/name="Bap"
-<<<<<<< HEAD
-config/features=PackedStringArray("4.2", "GL Compatibility")
-=======
 config/features=PackedStringArray("4.2", "Forward Plus")
->>>>>>> 6c4c59bb446415243dd750e431f541c581dd0cf8
 config/icon="res://icon.svg"
+<<<<<<<HEADconfig/features=PackedStringArray("4.2", "GL Compatibility")
 
 [dotnet]
 
@@ -26,11 +23,3 @@ project/assembly_name="Bap"
 
 version_control/plugin_name="GitPlugin"
 version_control/autoload_on_startup=true
-<<<<<<< HEAD
-
-[rendering]
-
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
-=======
->>>>>>> 6c4c59bb446415243dd750e431f541c581dd0cf8
