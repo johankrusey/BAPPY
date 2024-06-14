@@ -1,0 +1,44 @@
+[gd_scene load_steps=4 format=3 uid="uid://c1dcmfgedo7kd"]
+
+[ext_resource type="Texture2D" uid="uid://0rfxl5h3t7ei" path="res://Assets/kaart.png" id="1_utkw3"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8bfkq"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.972549, 0.972549, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.827451, 0.827451, 0.827451, 1)
+
+[sub_resource type="Theme" id="Theme_rhs4n"]
+Control/styles/panel = SubResource("StyleBoxFlat_8bfkq")
+HBoxContainer/constants/separation = 15
+Label/colors/font_color = Color(0, 0, 0, 1)
+MarginContainer/constants/margin_left = 15
+MarginContainer/constants/margin_right = 15
+VBoxContainer/constants/separation = 10
+
+[node name="Node2D" type="Node2D"]
+position = Vector2(0, 1)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(500, 0)
+anchor_mode = 0
+zoom = Vector2(0.4, 0.4)
+
+[node name="Map" type="Sprite2D" parent="."]
+z_index = -1
+scale = Vector2(2, 2)
+texture = ExtResource("1_utkw3")
+centered = false
+
+[node name="MapGenerator" type="MapGenerator" parent="."]
+
+[node name="Timebase" type="Timebase" parent="."]
+
+[node name="CanvasControl" type="CanvasControl" parent="."]
+theme = SubResource("Theme_rhs4n")
