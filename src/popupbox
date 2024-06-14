@@ -1,0 +1,25 @@
+#ifndef POPUPBOX_H
+#define POPUPBOX_H
+
+#include<godot_cpp/classes/panelcontainer.hpp>
+
+namespace godot {
+
+    class PopupBox : public PanelContainer {
+        GDCLASS(PopupBox, PanelContainer)
+
+    private:
+
+    protected:
+        static void _bind_methods();
+
+    public:
+        PopupBox();
+        ~PopupBox();
+
+
+    };
+
+} // namespace godot
+
+#endif // POPUPBOX_H
