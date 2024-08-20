@@ -20,7 +20,7 @@ namespace godot {
         Powerline();
         ~Powerline();
 
-        void _create_powerlines(int arr[][4], int rowcount); //Initiate the function that will create the lines
+        void _create_powerlines(int arr[][4], int rowcount, int& redlines, int& overloadedlines); //Initiate the function that will create the lines
     };
 
 }

@@ -24,6 +24,7 @@ private: //Define all the lines here, x1,y1,x2,y2 , this has to be an array of t
     //For defining the busses, their locations or their numbers for power flow look at tileset.cpp
     static constexpr int rowcount =  54;
     float wind, solar;
+    int redlines, overloadedlines;
     int lines[rowcount][4] = {
         {128, 89, 130, 86}, // line 1 44-27
         {137, 41, 128, 37}, // line 2 3-2
@@ -93,10 +94,12 @@ public:
     MapGenerator();
     ~MapGenerator();
 
-    void set_wind(const float p_wind);
+    void Emitvalueol(int ols);
+    void Emitvaluerl(int rls);
+    void set_wind(const float message2);
     float get_wind() const;
 
-    void set_solar(const float p_solar);
+    void set_solar(const float message3);
     float get_solar() const;
 
     void _ready();//Initialize the _ready function to be called directly after the constructor

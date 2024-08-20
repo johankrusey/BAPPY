@@ -20,7 +20,7 @@ class load_flow // This is code largely based on the code found at: https://gith
 {
 private:
     int read(int index);
-    void init_S(); // initialising S // busdata, S, N
+    void init_S(float, float); // initialising S // busdata, S, N
     void init_V(); // initialising V // busData, V, N
     auto guass_seidel(int, int, bool);
     void update();
@@ -32,7 +32,7 @@ private:
     void assignSlackLoad(); // Function to assign slack load based on weights
 
 public:
-    load_flow(string, string, int, int);  // Constructor to initialize;
+    load_flow(string, string, int, int, float, float);  // Constructor to initialize;
     int solar_bus_number = 47;
     int wind_bus_number = 46;
     int total_busses = 47;
@@ -71,7 +71,7 @@ Assumptions:
 int last_working_iteration = 0;
 
 // Constructor definition
-load_flow::load_flow(string busInputData, string lineInputData, int iter, int index) // JK - This is the main function that calls all of the subfunctions defined in this document
+load_flow::load_flow(string busInputData, string lineInputData, int iter, int index, float solar, float wind) // JK - This is the main function that calls all of the subfunctions defined in this document
 {
     this->busData.clear();
     this->iterations = iter;
@@ -82,7 +82,8 @@ load_flow::load_flow(string busInputData, string lineInputData, int iter, int in
     last_working_iteration = read(index);
 
     this->N = this->busData.size();
-    this->init_S();
+    this->init_S(solar, wind);
+    this->printBusData();
     this->init_V();
     return;
 }
@@ -214,7 +215,7 @@ int load_flow::read(int index) // JK - Reads the two input data files
     return last_working_iteration;
 }
 
-void load_flow::init_S() // JK - Initializes the power elements that should be guessed via Gauss-Seidel
+void load_flow::init_S(float solar, float wind) // JK - Initializes the power elements that should be guessed via Gauss-Seidel
 {
     S = vector<complex<double>>(N + 1, 0);
     for (int i = 0; i < this->N; i++)
@@ -222,6 +223,7 @@ void load_flow::init_S() // JK - Initializes the power elements that should be g
         switch ((int)busData[i][0])
         {
         case 2: // PV Bus
+
             this->S[i + 1].real(this->busData[i][3] - this->busData[i][5]);
             // Ensure busData reflects this initialization
             this->busData[i][3] = this->S[i + 1].real(); // Update Pg
@@ -239,6 +241,10 @@ void load_flow::init_S() // JK - Initializes the power elements that should be g
             break;
         }
     }
+    this->S[47].real(solar);
+    this->S[46].real(wind);
+    this->busData[46][3] = solar;
+    this->busData[45][3] = wind;
     return;
 }
 
@@ -255,20 +261,21 @@ void load_flow::printLineData() // JK - debugging function, not currently integr
 
 void dothepowerthing(int scenario, int index, float solar, float wind) {
     if (scenario == 0) {
-        load_flow obj("busInputData.csv", "lineInputData.csv", 500, index); //JK - For a grid up to about 50 busses 30 to 50 iterations are needed for higher accuracy
-        if (obj.solar_bus_number <= obj.N) {
+        load_flow obj("busInputData.csv", "lineInputData.csv", 50, index, solar, wind); //JK - For a grid up to about 50 busses 30 to 50 iterations are needed for higher accuracy
+/*         if (obj.solar_bus_number <= obj.N) {
             obj.busData[obj.solar_bus_number - 1][3] = solar; // Update Pg value for solar bus
             obj.S[obj.solar_bus_number].real(solar - obj.busData[obj.solar_bus_number - 1][5]); // Update S for solar bus
-/*             cout << "Updated Solar Bus " << obj.solar_bus_number << " Pg to " << solar << " MW" << endl; // Debug output */
+            cout << "Updated Solar Bus " << obj.solar_bus_number << " Pg to " << solar << " MW" << endl; // Debug output
         }
         if (obj.wind_bus_number <= obj.N) {
             obj.busData[obj.wind_bus_number - 1][3] = wind; // Update Pg value for wind bus
             obj.S[obj.wind_bus_number].real(wind - obj.busData[obj.wind_bus_number - 1][5]); // Update S for wind bus
-/*             cout << "Updated Wind Bus " << obj.wind_bus_number << " Pg to " << wind << " MW" << endl; // Debug output */
-        }
-
+            cout << "Updated Wind Bus " << obj.wind_bus_number << " Pg to " << wind << " MW" << endl; // Debug output
+        } */
         obj.calculateYBus();
         obj.solveLoadFlow();
+        cout << "after power flow calc" << endl;
+        obj.printBusData();
     }
     return;
 }
@@ -277,8 +284,6 @@ void load_flow::init_V() // JK - Initializes the voltage elements that should be
 {
     V = vector<vector<complex<double>>>(N + 1);
     this->V[1].push_back(complex<double>(1, 0)); // Sets the slack bus voltage
-    this->V[solar_bus_number].push_back(complex<double>(1, 0));
-    this->V[wind_bus_number].push_back(complex<double>(1, 0));
 
     // Ensure the busData for slack bus reflects this initialization
     if (this->busData.size() > 0) {
@@ -293,7 +298,6 @@ void load_flow::init_V() // JK - Initializes the voltage elements that should be
             this->V[i + 1].push_back(complex<double>(this->busData[i][1], 0));
             this->busData[i][1] = V[i + 1].back().real();
             break;
-
         case 3: // PQ BUS
             this->V[i + 1].push_back(complex<double>(1, 0));
             // Ensure busData reflects this initialization
@@ -432,7 +436,6 @@ auto load_flow::guass_seidel(int itr, int k, bool flag) // JK - the actual guass
             cout << this->busData[k - 1][i] << " ";
         cout << endl;
     }
-
     return result;
 }
 
@@ -474,9 +477,16 @@ void load_flow::update() // Function that updates all the vales while running th
 {
     for (int i = 1; i <= this->N; i++)
     {
+/*         cout << i << endl; */
         this->busData[i - 1][1] = abs(this->V[i][this->iterations]);            // V
         this->busData[i - 1][2] = arg(this->V[i][this->iterations]) * 180 / PI; // delta in degrees
+        /* cout << this->busData[i - 1][1] << "V" << endl;
+        cout << this->busData[i - 1][2] << "angle" << endl;
+        cout << this->busData[i - 1][3] << "P before calc" << endl;
+        cout << this->[i - 1][4] << "Q before calc" << endl;
+        cout << this->S[i].real() << " S " << this->busData[i - 1][5] << " bd5" << endl; */
         this->busData[i - 1][3] = this->S[i].real() + this->busData[i - 1][5];  // Pg
+        /* cout << this->S[i].imag() << " S " << this->busData[i - 1][6] << " bd6" << endl; */
         this->busData[i - 1][4] = this->S[i].imag() + this->busData[i - 1][6];  // Qg
     }
     return;
@@ -616,8 +626,14 @@ void load_flow::solveLoadFlow() // JK - This does as it suggests, it solves the 
     this->S[1].real(this->real_power(this->iterations, 1));
     this->S[1].imag(this->reactive_power(this->iterations, 1));
     //JK - Assign the slack load to buses that can handle it
+/*     for (int i = 1; i <= this->N; i++){
+        cout << "before assignslack in solveloadflow, i " << i << " S " << this->S[i - 1] << endl;
+    } */
     this->assignSlackLoad();
-
+/*     for (int i = 1; i <= this->N; i++){
+        cout << "after assign slack in solveloadflow, i " << i << " S " << this->S[i - 1] << endl;
+    } */
+    this->printBusData();
     this->update(); // updating busData
 /*     this->printBusData(); */
     this->output();
@@ -633,25 +649,22 @@ void load_flow::assignSlackLoad() //JK - Function to assign slack load based on 
     double totalSlackWeight = 0.0;
     for (int i = 0; i < this->N; i++)
     {
-        if (this->canBeSlack[i + 1])
+        if (this->canBeSlack[i])
         {
-            totalSlackWeight += this->slackWeights[i + 1]; //JK - total slack weight
+            totalSlackWeight += this->slackWeights[i]; //JK - total slack weight
         }
     }
 
     complex<double> totalSlack = this->S[1]; //JK - Total slack power
-
-    for (int i = 0; i < this->N; i++)
+    for (int i = 1; i < this->N; i++)
     {
-        double slackPercentage = this->slackWeights[i] / totalSlackWeight;
-        if (this->canBeSlack[i + 1] && i > 0)
+        double slackPercentage = this->slackWeights[i - 1] / totalSlackWeight;
+        if (this->canBeSlack[i - 1])
         {
-            this->S[i + 1] += totalSlack * slackPercentage; //JK - Add slack load to existing value
-        }
-        else{
-            this->S[i + 1] = totalSlack * slackPercentage;
+            this->S[i] = totalSlack * slackPercentage; //JK - Add slack load to existing value
         }
     }
+    this->S[1] = totalSlack * this->slackWeights[0] / totalSlackWeight;
     return;
 }
 #endif

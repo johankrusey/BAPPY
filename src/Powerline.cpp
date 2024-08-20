@@ -13,8 +13,8 @@
 using namespace godot;
 
 void Powerline::_bind_methods() {// The bind methods code is used to assign characteristics that can be edited inside of Godot, but we do not need any for the powerlines
-    ADD_SIGNAL(MethodInfo("red_lines_signal", PropertyInfo(Variant::INT, "red_lines")));
-    ADD_SIGNAL(MethodInfo("overloaded_lines_signal", PropertyInfo(Variant::INT, "overloaded_lines")));
+    ADD_SIGNAL(MethodInfo("RLS2", PropertyInfo(Variant::INT, "red_lines")));
+    ADD_SIGNAL(MethodInfo("OLS2", PropertyInfo(Variant::INT, "overloaded_lines")));
 }
 
 Powerline::Powerline() {
@@ -35,7 +35,7 @@ void Powerline::_cleanup_powerlines() {// Here we clean up dynamically allocated
     }
 }
 
-void Powerline::_create_powerlines(int arr[][4],int rowCount) { // This is a function that creates all the powerlines and the arrows on them (polygons)
+void Powerline::_create_powerlines(int arr[][4],int rowCount, int& redlines, int&overloadedlines) { // This is a function that creates all the powerlines and the arrows on them (polygons)
     std::ifstream inputFile("C:\\Users\\rikie\\Desktop\\BAP\\Godot\\bap\\src\\Output_lines.csv"); // This is not relative pathing due to Godot not liking csv files in its path
     if (!inputFile) {
         UtilityFunctions::printerr("Error opening output_lines file!"); // Debugging message in case the pathing is messed up
@@ -82,8 +82,6 @@ void Powerline::_create_powerlines(int arr[][4],int rowCount) { // This is a fun
         UtilityFunctions::printerr("Warning: Expected ", rowCount, " rows but read ", importantData.size(), " rows.");
     }
 
-    int overloaded_lines = 0;
-    int red_lines = 0;
     for (int k = 0; k < rowCount; ++k) { // Iterate over all the lines in arr[][]
         if (k >= importantData.size()) {
             UtilityFunctions::printerr("Error: Not enough data to iterate over ", rowCount, " rows.");
@@ -102,20 +100,20 @@ void Powerline::_create_powerlines(int arr[][4],int rowCount) { // This is a fun
         Color lineColor; // For info see https://docs.godotengine.org/en/stable/classes/class_color.html#class-color
         if (value > 100) { // This code selects the line color based on the percentage loading
             lineColor = Color(0, 0, 0, 1); // Black for overloaded lines
-            overloaded_lines += 1;
+            overloadedlines += 1;
         }
         else if (value > 95) {
-            red_lines += 1;
+            redlines += 1;
             lineColor = Color(1, 0, 0, 1); // Red for nearly overloaded lines 95+%
         }
         else if (value > 75) {
             lineColor = Color(1, 0.647059, 0, 1); // Orange for more than 75
         }
         else if (value > 50) {
-            lineColor = Color(0.678431, 1, 0.184314, 1); // Green-Yellow for more than half (because yellow was not visible enough) 
+            lineColor = Color(0.878, 0.788, 0.18, 1); // Green-Yellow for more than half (because yellow was not visible enough) 
         }
         else if (value < 1){
-            lineColor = Color(0, 0.8, 0.831373, 1); // White smoke color for "unused" lines
+            lineColor = Color(0, 0.8, 0.831373, 1); // Light blue color for "unused" lines
         }
         else {
             lineColor = Color(0.196078, 0.803922, 0.196078, 1); // Lime-Green for less than half
@@ -150,6 +148,7 @@ void Powerline::_create_powerlines(int arr[][4],int rowCount) { // This is a fun
 
         add_child(arrow); // Add the arrow as a child of the Node2D
     }
-    emit_signal("red_lines_signal", red_lines);
-    emit_signal("overloaded_lines_signal", overloaded_lines);
+    UtilityFunctions::print("emit");
+    /* emit_signal("red_lines_signal", red_lines);
+    emit_signal("overloaded_lines_signal", overloaded_lines); */
 }

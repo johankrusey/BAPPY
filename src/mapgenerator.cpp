@@ -15,6 +15,9 @@ void MapGenerator::_bind_methods() { // When the time_index_signal is emitted by
     ClassDB::bind_method(D_METHOD("get_solar"), &MapGenerator::get_solar);
     ClassDB::bind_method(D_METHOD("set_solar", "p_sized"), &MapGenerator::set_solar);
     ClassDB::add_property("MapGenerator", PropertyInfo(Variant::FLOAT, "Solar Power (p.u.)"), "set_solar", "get_solar");
+
+    ADD_SIGNAL(MethodInfo("RLS2", PropertyInfo(Variant::INT, "red_lines")));
+    ADD_SIGNAL(MethodInfo("OLS2", PropertyInfo(Variant::INT, "overloaded_lines")));
 } // You can also define more slider-like properties such as image size where you can increase and decrease it in godot, for example, in this function _bind_methods, for an example with path movement look at the "Adding properties" part of: https://docs.godotengine.org/en/stable/tutorials/scripting/gdextension/gdextension_cpp_example.html
 
 MapGenerator::MapGenerator() : tiles(nullptr), linenode(nullptr) {
@@ -49,7 +52,7 @@ void MapGenerator::_ready() { // This function is called directly after the cons
     tiles->_create_map(); // Here the map is created via a function defined in tileset.cpp
 
     linenode = memnew(Powerline); // Here memory is allocated for the lines
-    linenode->_create_powerlines(lines, rowcount); // Here the lines are created via the function defined in powerline.cpp
+    linenode->_create_powerlines(lines, rowcount, redlines, overloadedlines); // Here the lines are created via the function defined in powerline.cpp
     add_child(linenode); // Add them as a child to the main node
     
     Node* parentnode = get_parent();
@@ -60,6 +63,27 @@ void MapGenerator::_ready() { // This function is called directly after the cons
     else{
         UtilityFunctions::print("Timebase node not found");
     }
+    Node2D* arduinonode = parentnode->get_node<Node2D>("Arduinonode");
+    UtilityFunctions::print(arduinonode);
+    if (arduinonode){
+        arduinonode->connect("Solar", Callable(this, "set_solar"));
+        arduinonode->connect("Wind", Callable(this,"set_wind"));
+    }
+    else{
+        UtilityFunctions::print("Arduino connection node not found");
+    }
+}
+
+void MapGenerator::Emitvalueol(int ols){
+    UtilityFunctions::print("emitting ol values");
+    emit_signal("OLS2", overloadedlines);
+    UtilityFunctions::print("mapgen emit OL", overloadedlines);
+}
+
+void MapGenerator::Emitvaluerl(int rls){
+    UtilityFunctions::print("emitting rl values");
+    emit_signal("RLS2", rls);
+    UtilityFunctions::print("Mapgen emit RL:", rls);
 }
 
 float MapGenerator::get_solar() const { //This allows the function to obtain the current value of solar power
@@ -68,15 +92,15 @@ float MapGenerator::get_solar() const { //This allows the function to obtain the
 float MapGenerator::get_wind() const { //This allows the function to obtain the current value of wind power
     return wind;
 }
-void MapGenerator::set_wind(const float p_wind) { //This allows the setting of wind power via Godot via a function
-    if (p_wind != wind) {
-        wind = p_wind;
+void MapGenerator::set_wind(const float message2) { //This allows the setting of wind power via Godot via a function
+    if (message2 != wind) {
+        wind = message2/100;
     }
     return;
 }
-void MapGenerator::set_solar(const float p_solar) { //This allows the setting of solar power via Godot via a function
-    if (p_solar != solar) {
-        solar = p_solar;
+void MapGenerator::set_solar(const float message3) { //This allows the setting of solar power via Godot via a function
+    if (message3 != solar) {
+        solar = message3/100;
     }
     return;
 }
@@ -91,9 +115,15 @@ void MapGenerator::_on_timebase_time_index_signal(int index) { // When this func
     }
     dothepowerthing(0, index, solar, wind); // After everything is gone calculate the power flow in the new time instance will run
     linenode = memnew(Powerline); // The new lines will be generated to correspond with the new calculations
-    linenode->_create_powerlines(lines, rowcount); // This might alter their color or arrow direction
+    redlines = 0;
+    overloadedlines = 0;
+    linenode->_create_powerlines(lines, rowcount, redlines, overloadedlines); // This might alter their color or arrow direction
+    emit_signal("RLS2", redlines);
+    emit_signal("OLS2", overloadedlines);
+    UtilityFunctions::print("!emitting rl and ol values");
     add_child(linenode); // Add the new lines as a child to the main node
     return;
+    
 }
 
 void MapGenerator::_print_tree(){

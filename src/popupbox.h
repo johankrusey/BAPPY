@@ -27,6 +27,7 @@ namespace godot {
         int initial_index;
         int previous_index;
         int bus_index;
+        bool node_found;
     protected:
         static void _bind_methods();
 

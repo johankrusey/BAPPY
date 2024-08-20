@@ -15,9 +15,6 @@ class Timebase : public Timer {
 
 private:
     Timer* timebase = new Timer;
-    bool pause_state;
-    int flowdirection;
-    int timeindex;
     float amount;
     float old_amount;
     String message; 
@@ -25,6 +22,9 @@ private:
 protected:
     static void _bind_methods();
 public:
+    bool pause_state;
+    int flowdirection;
+    int timeindex;
     Timebase();
     ~Timebase();
 

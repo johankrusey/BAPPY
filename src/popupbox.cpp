@@ -126,7 +126,7 @@ int* PopupBox::_get_node_data(int node_index, int time_index){
         std::cerr << "Could not find current bus data\n";
     }
     std::getline(fin, line, '\n');                  //remove header row
-    for (int i = 0; i < node_index; i++){
+    for (int i = 0; i < node_index - 1; i++){
         std::getline(fin, line, '\n');             //remove data from nodes that are not needed
     }
     std::getline(fin, line, '\n');                     //read the row that has the data of the wanted bus
@@ -134,12 +134,16 @@ int* PopupBox::_get_node_data(int node_index, int time_index){
     for (int k = 0; k < 11; k++){
         std::getline(s, word, ',');
         if (k == 3){
-            float tempdata = stof(word);                //read only the power in MW
-            tempdata *= 100;
-            node_data[0] = tempdata;
-        }                                     
-    }            
-    
+            float tempdata1 = stof(word);                //read the power in MW
+            tempdata1 *= 100;
+            node_data[0] = -1 * tempdata1;
+        }   
+        if (k == 5){
+            float tempdata2 = stof(word);                //read the power in MW
+            tempdata2 *= 100;
+            node_data[0] += tempdata2;
+        }                                               
+    }
     fin.close();
     fin.open("C:\\Users\\rikie\\Desktop\\BAP\\Godot\\bap\\src\\Forecast.csv", std::ios::in);
     if (!fin.is_open()) {
@@ -158,14 +162,15 @@ int* PopupBox::_get_node_data(int node_index, int time_index){
         std::getline(z, word, ',');                     //get bus index from forecast file
         if (stoi(word) == bus_index){
             node_found = true;
-            for (int k = 0; k < 24; k++){
+            for (int k = 0; k < 25; k++){
                 std::getline(z, word, ',');
-                node_data[k+1] = stoi(word);
+                node_data[k] = stoi(word);
             }
         }
     }
     fin.close();
     UtilityFunctions::print("       finished getting node data");
+    std::cout << "node load: " << node_data[0] << std::endl; 
     return node_data;
 }
 
@@ -260,8 +265,8 @@ void PopupBox::_create_line_legend(){
     _create_line_legend_entry(">100%", Color(0, 0, 0, 1));
     _create_line_legend_entry("95-100%", Color(1, 0, 0, 1));
     _create_line_legend_entry("75-95%", Color(1, 0.647059, 0, 1));
-    _create_line_legend_entry("50-75%", Color(0.678431, 1, 0.184314, 1));
-    _create_line_legend_entry("1-50%", Color(0.678431, 1, 0.184314, 1));
+    _create_line_legend_entry("50-75%", Color(0.878, 0.788, 0.18, 1));
+    _create_line_legend_entry("1-50%", Color(0.196078, 0.803922, 0.196078, 1));
     _create_line_legend_entry("0-1%", Color(0, 0.8, 0.831373, 1));
     return;
 }

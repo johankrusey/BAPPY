@@ -112,7 +112,7 @@ void CanvasControl::_create_clock_labels(){
     clocklabel->set_offset(Side::SIDE_RIGHT, -40);
     clocklabel->set_offset(Side::SIDE_LEFT, -500);
     clocklabel->set_horizontal_alignment(HorizontalAlignment::HORIZONTAL_ALIGNMENT_RIGHT);
-    clocklabel->set_text("00:00");
+    clocklabel->set_text("Day 1 00:00");
     clocklabel->add_theme_font_size_override("font_size", 75);
     add_child(clocklabel);
     Label* statuslabel = memnew(Label);
@@ -133,11 +133,11 @@ void CanvasControl::_update_clock_labels(int time_index, bool pause_state, int d
     Label* clocklabel = get_node<Label>(clocknode->get_path());
     Label* statuslabel = get_node<Label>(statusnode->get_path());
     std::string time;
-    if (time_index < 10){
-        time = "0" + std::to_string(time_index) + ":00";
+    if ((time_index % 24) < 10){
+        time = "Day " + std::to_string((int)(std::floor(time_index / 24) + 1)) + " 0" + std::to_string(time_index % 24) + ":00";
     }
     else{
-        time = std::to_string(time_index) + ":00";
+        time = "Day " + std::to_string((int)(std::floor(time_index / 24) + 1)) + " " + std::to_string(time_index % 24) + ":00";
     }
     clocklabel->set_text(time.c_str());
     if (pause_state){

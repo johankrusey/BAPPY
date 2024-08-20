@@ -19,7 +19,7 @@ void Timebase::_bind_methods() { //Create the sized property (as size is already
 }
 
 Timebase::Timebase(){       //initialize the timer with some arbitrary standard values
-    amount = 5;             //set the initial time it takes for the timer to finish to 5 seconds
+    amount = 1.5;             //set the initial time it takes for the timer to finish to 5 seconds
     flowdirection = 1;      //set the initial direction of time flow to be positive
     timeindex = 0;          //set the initial time index to 0
     pause_state = false;    //set the initial pause state boolean to false because the timer starts as soon as the program launches
@@ -37,7 +37,7 @@ void Timebase::_ready(){                                //this function is calle
     timebase->connect("timeout", Callable(this, "_on_timebase_timeout"));               //internally connect the timeout signal of the timer to the _on_timebase_timeout function
 
     Node* parentnode = get_parent();                                        //find the parent node of this timebase node instance
-    Node2D* arduinonode = parentnode->get_node<Node2D>("Timebase");         //using the parent node find the arduino controlling node
+    Node2D* arduinonode = parentnode->get_node<Node2D>("Arduinonode");         //using the parent node find the arduino controlling node
     if (arduinonode){
         arduinonode->connect("SMR", Callable(this, "_on_direction_signal"));        //connect the direction managing signal to the timebase node
     }
@@ -50,7 +50,12 @@ void Timebase::_on_timebase_timeout(){                  //this function is calle
     UtilityFunctions::print("index: ", timeindex, " amt: ", amount, " dir: ", flowdirection);
     emit_signal("time_index_signal", timeindex);                                                //emit a signal that sends the current time index to other nodes
     emit_signal("clock_tracker_signal", timeindex, pause_state, flowdirection);                 //emit a signal that sends the current time index, pause state and time flow direction to other nodes
-    timeindex = timeindex + flowdirection;                                                      //update the time index to the new value
+    if (timeindex + flowdirection < 0){
+        timeindex = 0;
+    }
+    else{
+        timeindex += flowdirection;
+    }                                                    //update the time index to the new value
 }
 
 int Timebase::_get_time_index(){                       //this function is used to return the private class variable timeindex to other classes
@@ -59,20 +64,24 @@ int Timebase::_get_time_index(){                       //this function is used t
 }
 
 void Timebase::_on_direction_signal(String message){    //this function determines the direction in which time should flow or if it should pause
-    int selector = message.to_int();
+    int selector = message.to_int(); 
     switch(selector){                                   //case statement for signal handling
                 case -1:
                     flowdirection = -1;                 //revert time
+                    UtilityFunctions::print("reverting time");
                     break;
 
                 case 1:
                     flowdirection = 1;                  //forward time
+                    UtilityFunctions::print("forwarding time");
                     break;
 
                 case 2:
                     if (!timebase->is_paused()){
                         timebase->set_paused(true);     //pause
                         pause_state = true;
+                        emit_signal("clock_tracker_signal", timeindex, pause_state, flowdirection);
+                        UtilityFunctions::print("pausing time");
                     }
                     break;
 
@@ -80,6 +89,8 @@ void Timebase::_on_direction_signal(String message){    //this function determin
                     if (timebase->is_paused()){
                         timebase->set_paused(false);    //unpause
                         pause_state = false;
+                        emit_signal("clock_tracker_signal", timeindex, pause_state, flowdirection);
+                        UtilityFunctions::print("unpausing time");
                     }
                     break;
 
@@ -124,6 +135,28 @@ void Timebase::_input(InputEventKey *event){                    //input handling
                     timebase->set_wait_time(amount);                //set new timer time
                     break;
 
+                case 83:
+                    if (!timebase->is_paused()){
+                        timebase->set_paused(true);     //pause
+                        pause_state = true;
+                        emit_signal("clock_tracker_signal", timeindex, pause_state, flowdirection);
+                        UtilityFunctions::print("pausing time");
+                    }
+                    else if (timebase->is_paused()){
+                        timebase->set_paused(false);    //unpause
+                        pause_state = false;
+                        emit_signal("clock_tracker_signal", timeindex, pause_state, flowdirection);
+                        UtilityFunctions::print("unpausing time");
+                    }
+                    break;
+                case 82:
+                    if (flowdirection < 0){
+                        flowdirection = 1;
+                    }
+                    else {
+                        flowdirection = -1;
+                    }
+                    break;
                 default:
                     break;
                 }
